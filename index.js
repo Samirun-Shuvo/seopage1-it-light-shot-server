@@ -1,4 +1,4 @@
-require("dotenv").config(); // Load environment variables from a .env file
+require("dotenv").config();
 const express = require("express");
 const { MongoClient } = require("mongodb");
 const multer = require("multer");
@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(cors());
 
 // Set up multer for handling multiple file uploads
-const storage = multer.memoryStorage(); // Store files temporarily in memory
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Initialize MongoDB connection
@@ -46,7 +46,7 @@ const attachDb = async (req, res, next) => {
   }
 };
 
-// Sample route
+
 app.get("/", (req, res) => {
   res.send("Hello, world!");
 });
@@ -54,23 +54,17 @@ app.get("/", (req, res) => {
 // Route to handle multiple file uploads with taskId
 app.post("/uploadfiles", attachDb, upload.array("files"), async (req, res) => {
   const { taskId } = req.body;
-
   if (!taskId) {
     return res.status(400).json({ message: "Task ID is required" });
   }
-
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ message: "No files uploaded" });
   }
 
   try {
     const collection = req.db.collection("uploadfiledata");
-
-    // Retrieve existing file names for the taskId
     const existingFiles = await collection.find({ taskId }).toArray();
     const existingFileNames = existingFiles.map((file) => file.filename);
-
-    // Filter out files that already exist
     const newFiles = req.files.filter(
       (file) => !existingFileNames.includes(file.originalname)
     );
@@ -80,17 +74,13 @@ app.post("/uploadfiles", attachDb, upload.array("files"), async (req, res) => {
         .status(200)
         .json({ message: "Files already exist in database", status: "exist" });
     }
-
-    // Prepare metadata for new files only
     const fileDataArray = newFiles.map((file) => ({
       taskId,
       filename: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
-      data: file.buffer, // Optional: store the actual file content
+      data: file.buffer,
     }));
-
-    // Insert new files data into MongoDB
     await collection.insertMany(fileDataArray);
 
     res.status(200).json({
@@ -106,7 +96,6 @@ app.post("/uploadfiles", attachDb, upload.array("files"), async (req, res) => {
 // Route to fetch files for a specific taskId
 app.get("/uploadfiles/:taskId", attachDb, async (req, res) => {
   const taskId = req.params.taskId;
-
   try {
     const collection = req.db.collection("uploadfiledata");
     const taskFiles = await collection.find({ taskId }).toArray();
