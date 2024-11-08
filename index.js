@@ -3,6 +3,7 @@ const express = require("express");
 const { MongoClient } = require("mongodb");
 const multer = require("multer");
 const cors = require("cors");
+const serverless = require("serverless-http");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -124,3 +125,5 @@ process.on("SIGINT", async () => {
   }
   process.exit(0);
 });
+module.exports = app;
+module.exports.handler = serverless(app);
